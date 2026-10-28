@@ -47,10 +47,7 @@ fn copy_from_to<R: io::Read, W: io::Write>(mut r: R, mut w: W) -> io::Result<usi
     loop {
         match r.read(&mut buffer[..]) {
             Err(e) => {
-                match e.kind() {
-                    io::ErrorKind::Interrupted => continue,
-                    _ => {}
-                }
+                if e.kind() == io::ErrorKind::Interrupted { continue }
                 return Err(e);
             }
             Ok(size) => {
@@ -59,10 +56,7 @@ fn copy_from_to<R: io::Read, W: io::Write>(mut r: R, mut w: W) -> io::Result<usi
                 } else {
                     match w.write_all(&buffer[..size]) {
                         Err(e) => {
-                            match e.kind() {
-                                io::ErrorKind::Interrupted => continue,
-                                _ => {}
-                            }
+                            if e.kind() == io::ErrorKind::Interrupted { continue }
                             return Err(e);
                         }
                         Ok(_) => out_size += size,

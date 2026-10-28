@@ -17,15 +17,17 @@ static ALICE: &[u8] = include_bytes!("../../testdata/alice29.txt");
 
 #[test]
 fn test_custom_dict_minimal() {
-    let mut raw = UnlimitedBuffer::new("\012345656789abcde".as_bytes());
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 10;
+    let mut raw = UnlimitedBuffer::new("\x0012345656789abcde".as_bytes());
+    let params = BrotliEncoderParams {
+        quality: 10,
+        ..Default::default()
+    };
     let mut br = UnlimitedBuffer::new(&[]);
     let mut rt = UnlimitedBuffer::new(&[]);
     let dict = "123456789abcde".as_bytes();
     super::compress(&mut raw, &mut br, 4096, &params, dict, 1).unwrap();
     raw.reset_read();
-    eprintln!("Compressed: {:?}", &br);
+    eprintln!("Compressed: {:?}", br);
     let mut vec = Vec::<u8>::new();
     vec.extend(dict);
     super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)).unwrap();
@@ -34,8 +36,10 @@ fn test_custom_dict_minimal() {
 
 #[test]
 fn test_custom_dict_large() {
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 11;
+    let params = BrotliEncoderParams {
+        quality: 11,
+        ..Default::default()
+    };
     let mut br = UnlimitedBuffer::new(&[]);
     let mut rt = UnlimitedBuffer::new(&[]);
     let mut dict = [0u8; 256];
@@ -51,11 +55,11 @@ fn test_custom_dict_large() {
             counter -= index / 11;
         }
     }
-    eprintln!("Uncompressed: {:?}", &data_source);
+    eprintln!("Uncompressed: {:?}", data_source);
     let mut raw = UnlimitedBuffer::new(&data_source);
     super::compress(&mut raw, &mut br, 4096, &params, &dict, 1).unwrap();
     raw.reset_read();
-    eprintln!("Compressed: {:?}", &br);
+    eprintln!("Compressed: {:?}", br);
 
     // Write debug files to temp directory (works on all platforms)
     if let Ok(temp_dir) = std::env::var("TMPDIR").or_else(|_| std::env::var("TEMP")) {
@@ -75,8 +79,10 @@ fn test_custom_dict_large() {
 
 #[test]
 fn test_custom_dict_medium() {
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 11;
+    let params = BrotliEncoderParams {
+        quality: 11,
+        ..Default::default()
+    };
     let mut br = UnlimitedBuffer::new(&[]);
     let mut rt = UnlimitedBuffer::new(&[]);
     let mut dict = [0u8; 256];
@@ -112,7 +118,7 @@ fn test_custom_dict_medium() {
     let mut raw = UnlimitedBuffer::new(&new_data_source);
     super::compress(&mut raw, &mut br, 4096, &params, &dict, 1).unwrap();
     raw.reset_read();
-    eprintln!("Compressed: {:?}", &br);
+    eprintln!("Compressed: {:?}", br);
     let mut vec = Vec::<u8>::new();
     vec.extend(dict);
     super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)).unwrap();
@@ -122,15 +128,17 @@ fn test_custom_dict_medium() {
 #[test]
 fn test_custom_dict_alice() {
     let mut raw = UnlimitedBuffer::new(ALICE);
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 11;
+    let params = BrotliEncoderParams {
+        quality: 11,
+        ..Default::default()
+    };
     let mut br = UnlimitedBuffer::new(&[]);
     let mut rt = UnlimitedBuffer::new(&[]);
     let dict = &ALICE[12515..23411];
     super::compress(&mut raw, &mut br, 4096, &params, dict, 1).unwrap();
     raw.reset_read();
     eprintln!("Dict {:?}", dict);
-    eprintln!("Compressed: {:?}", &br);
+    eprintln!("Compressed: {:?}", br);
     let mut vec = Vec::<u8>::new();
     vec.extend(dict);
     super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)).unwrap();
@@ -147,16 +155,18 @@ fn test_custom_dict_alice() {
 #[test]
 fn test_custom_dict_alice_9_5() {
     let mut raw = UnlimitedBuffer::new(ALICE);
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 11;
-    params.q9_5 = true;
+    let params = BrotliEncoderParams {
+        quality: 11,
+        q9_5: true,
+        ..Default::default()
+    };
     let mut br = UnlimitedBuffer::new(&[]);
     let mut rt = UnlimitedBuffer::new(&[]);
     let dict = &ALICE[12515..23411];
     super::compress(&mut raw, &mut br, 4096, &params, dict, 1).unwrap();
     raw.reset_read();
     eprintln!("Dict {:?}", dict);
-    eprintln!("Compressed: {:?}", &br);
+    eprintln!("Compressed: {:?}", br);
     let mut vec = Vec::<u8>::new();
     vec.extend(dict);
     super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)).unwrap();
@@ -169,8 +179,10 @@ fn test_custom_dict_alice_9_5() {
 #[test]
 fn test_custom_wrong_dict_fails() {
     let mut raw = UnlimitedBuffer::new(ALICE);
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 10;
+    let params = BrotliEncoderParams {
+        quality: 10,
+        ..Default::default()
+    };
     let mut br = UnlimitedBuffer::new(&[]);
     let mut rt = UnlimitedBuffer::new(&[]);
     let dict = &ALICE[12515..19515];
@@ -178,10 +190,7 @@ fn test_custom_wrong_dict_fails() {
     raw.reset_read();
     let mut vec = Vec::<u8>::new();
     vec.extend(&dict[1..]); // slightly offset dictionary to be wrong, and ensure the dict was being used above
-    match super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)) {
-        Ok(_) => panic!("Decompression should have failed"),
-        Err(_) => {}
-    }
+    if super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)).is_ok() { panic!("Decompression should have failed") }
     if rt.data() == raw.data() {
         panic!("they should be unequal");
     }
@@ -190,8 +199,10 @@ fn test_custom_wrong_dict_fails() {
 #[test]
 fn test_custom_wrong_dict_fails_but_doesnt_disrupt_compression_strategy() {
     let mut raw = UnlimitedBuffer::new(ALICE);
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 6;
+    let params = BrotliEncoderParams {
+        quality: 6,
+        ..Default::default()
+    };
     let mut br = UnlimitedBuffer::new(&[]);
     let mut rt = UnlimitedBuffer::new(&[]);
     let dict = &ALICE[12515..19515];
@@ -213,9 +224,11 @@ fn test_custom_dict_for_multithreading() {
         UnlimitedBuffer::new(&ALICE[ALICE.len() / 3..2 * ALICE.len() / 3]),
         UnlimitedBuffer::new(&ALICE[2 * ALICE.len() / 3..]),
     ];
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 10;
-    params.appendable = true;
+    let mut params = BrotliEncoderParams {
+        quality: 10,
+        appendable: true,
+        ..Default::default()
+    };
     let mut brs = [
         UnlimitedBuffer::new(&[]),
         UnlimitedBuffer::new(&[]),
@@ -345,10 +358,12 @@ fn test_attach_dictionary_exceeding_window() {
 
     let dict = &ALICE[..65536];
     let plaintext = &ALICE[65536..];
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 11;
+    let params = BrotliEncoderParams {
+        quality: 11,
+        lgwin: 16,
+        ..Default::default()
+    };
     // Window is 64KiB, so dictionary + output is more than twice the window.
-    params.lgwin = 16;
     let mut raw = UnlimitedBuffer::new(plaintext);
     let mut br = UnlimitedBuffer::new(&[]);
     super::compress(&mut raw, &mut br, 4096, &params, dict, 1).unwrap();

@@ -140,19 +140,17 @@ pub fn write_all<ErrType, W: CustomWrite<ErrType>, ErrMaker: FnMut() -> Option<E
     mut error_to_return_if_zero_bytes_written: ErrMaker,
 ) -> Result<(), ErrType> {
     while !buf.is_empty() {
-        match writer.write(buf) {
-            Ok(bytes_written) => {
-                if bytes_written != 0 {
-                    buf = &buf[bytes_written..]
+        {
+            let bytes_written = writer.write(buf)?;
+            if bytes_written != 0 {
+                buf = &buf[bytes_written..]
+            } else {
+                if let Some(err) = error_to_return_if_zero_bytes_written() {
+                    return Err(err);
                 } else {
-                    if let Some(err) = error_to_return_if_zero_bytes_written() {
-                        return Err(err);
-                    } else {
-                        return Ok(());
-                    }
+                    return Ok(());
                 }
             }
-            Err(e) => return Err(e),
         }
     }
     Ok(())
@@ -246,10 +244,7 @@ impl<ErrType, W: CustomWrite<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: B
         self.output.as_mut().unwrap()
     }
     pub fn into_inner(mut self) -> W {
-        match self.flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH) {
-            Ok(_) => {}
-            Err(_) => {}
-        }
+        let _ = self.flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH).is_ok();
         self.output.take().unwrap()
     }
 }
@@ -259,10 +254,7 @@ impl<ErrType, W: CustomWrite<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: B
 {
     fn drop(&mut self) {
         if self.output.is_some() {
-            match self.flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
+            let _ = self.flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH).is_ok();
         }
         BrotliEncoderDestroyInstance(&mut self.state);
     }

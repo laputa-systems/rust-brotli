@@ -1,4 +1,7 @@
 #![cfg_attr(feature = "benchmark", feature(test))]
+#![allow(semicolon_in_expressions_from_non_local_macros)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::type_complexity)]
 
 // The seccomp decompress path builds a calloc-backed stack allocator with
 // declare_stack_allocator_struct!/define_allocator_memory_pool!; those macros
@@ -19,7 +22,6 @@ mod tests;
 mod util;
 mod validate;
 
-use core::cmp::{max, min};
 use core::ops;
 use std::env;
 use std::fs::File;
@@ -586,7 +588,7 @@ fn main() {
                 continue;
             }
             if argument.starts_with("-customdictionary=") && !double_dash {
-                for item in argument.splitn(2, |c| c == '=').skip(1) {
+                for item in argument.splitn(2, '=').skip(1) {
                     custom_dictionary = read_custom_dictionary(item);
                 }
                 continue;
@@ -696,17 +698,12 @@ fn main() {
                 continue;
             }
             if argument.starts_with("-j") && !double_dash {
-                num_threads = min(
-                    max(
-                        1,
-                        argument
-                            .trim_matches('-')
-                            .trim_matches('j')
-                            .parse::<i32>()
-                            .unwrap() as usize,
-                    ),
-                    MAX_THREADS,
-                );
+                num_threads = (argument
+                    .trim_matches('-')
+                    .trim_matches('j')
+                    .parse::<i32>()
+                    .unwrap() as usize)
+                    .clamp(1, MAX_THREADS);
                 continue;
             }
             if argument.starts_with("-bytescore=") && !double_dash {
@@ -860,7 +857,7 @@ fn main() {
             println_stderr!("byte aligned streams only supported when catable or appendable!");
             return;
         }
-        if filenames[0] != "" {
+        if !filenames[0].is_empty() {
             let mut input = match File::open(Path::new(&filenames[0])) {
                 Err(why) => panic!("couldn't open {:}\n{:}", filenames[0], why),
                 Ok(file) => file,
@@ -1033,12 +1030,12 @@ fn main() {
                     &custom_dictionary[..],
                     num_threads,
                 ) {
-                    Ok(_) => return,
+                    Ok(_) => (),
                     Err(e) => panic!("Error {:?}", e),
                 }
             } else {
                 match decompress(&mut io::stdin(), &mut io::stdout(), buffer_size, custom_dictionary.into()) {
-          Ok(_) => return,
+          Ok(_) => (),
           Err(e) => panic!("Error: {:} during brotli decompress\nTo compress with Brotli, specify the -c flag.", e),
         }
             }

@@ -112,10 +112,10 @@ fn GetNextOutInternal<'a>(
     storage: &'a mut [u8],
     tiny_buf: &'a mut [u8; 16],
 ) -> &'a mut [u8] {
-    match next_out {
-        &NextOut::DynamicStorage(offset) => &mut storage[offset as usize..],
-        &NextOut::TinyBuf(offset) => &mut tiny_buf[offset as usize..],
-        &NextOut::None => &mut [],
+    match *next_out {
+        NextOut::DynamicStorage(offset) => &mut storage[offset as usize..],
+        NextOut::TinyBuf(offset) => &mut tiny_buf[offset as usize..],
+        NextOut::None => &mut [],
     }
 }
 macro_rules! GetNextOut {
@@ -124,17 +124,17 @@ macro_rules! GetNextOut {
     };
 }
 fn NextOutIncrement(next_out: &NextOut, inc: i32) -> NextOut {
-    match next_out {
-        &NextOut::DynamicStorage(offset) => NextOut::DynamicStorage((offset as i32 + inc) as u32),
-        &NextOut::TinyBuf(offset) => NextOut::TinyBuf((offset as i32 + inc) as u32),
-        &NextOut::None => NextOut::None,
+    match *next_out {
+        NextOut::DynamicStorage(offset) => NextOut::DynamicStorage((offset as i32 + inc) as u32),
+        NextOut::TinyBuf(offset) => NextOut::TinyBuf((offset as i32 + inc) as u32),
+        NextOut::None => NextOut::None,
     }
 }
 fn IsNextOutNull(next_out: &NextOut) -> bool {
-    match next_out {
-        &NextOut::DynamicStorage(_) => false,
-        &NextOut::TinyBuf(_) => false,
-        &NextOut::None => true,
+    match *next_out {
+        NextOut::DynamicStorage(_) => false,
+        NextOut::TinyBuf(_) => false,
+        NextOut::None => true,
     }
 }
 
@@ -544,7 +544,7 @@ fn check_large_window_ok() -> bool {
 }
 
 pub fn SanitizeParams(params: &mut BrotliEncoderParams) {
-    params.quality = min(11i32, max(0i32, params.quality));
+    params.quality = params.quality.clamp(0i32, 11i32);
     if params.lgwin < 10i32 {
         params.lgwin = 10i32;
     } else if params.lgwin > 24i32 {
@@ -579,7 +579,7 @@ fn ComputeLgBlock(params: &BrotliEncoderParams) -> i32 {
             lgblock = min(18i32, params.lgwin);
         }
     } else {
-        lgblock = min(24i32, max(16i32, lgblock));
+        lgblock = lgblock.clamp(16i32, 24i32);
     }
     lgblock
 }
@@ -664,10 +664,10 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
             return true;
         }
         SanitizeParams(&mut self.params);
-        self.params.lgblock = ComputeLgBlock(&mut self.params);
+        self.params.lgblock = ComputeLgBlock(&self.params);
         ChooseDistanceParams(&mut self.params);
         self.remaining_metadata_bytes_ = u32::MAX;
-        RingBufferSetup(&mut self.params, &mut self.ringbuffer_);
+        RingBufferSetup(&self.params, &mut self.ringbuffer_);
         {
             let mut lgwin: i32 = self.params.lgwin;
             if self.params.quality == 0i32 || self.params.quality == 1i32 {
@@ -1133,10 +1133,7 @@ pub(crate) fn hasher_setup<Alloc: Allocator<u16> + Allocator<u32>>(
     is_last: bool,
 ) {
     let one_shot = position == 0 && is_last;
-    let is_uninit = match (handle) {
-        &mut UnionHasher::Uninit => true,
-        _ => false,
-    };
+    let is_uninit = matches!(handle, &mut UnionHasher::Uninit);
     if is_uninit {
         //let alloc_size: usize;
         ChooseHasher(&mut (*params));
@@ -1178,18 +1175,18 @@ fn HasherPrependCustomDictionary<Alloc: alloc::Allocator<u16> + alloc::Allocator
         size,
         false,
     );
-    match handle {
-        &mut UnionHasher::H2(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H3(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H4(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H5(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H5q7(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H5q5(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H6(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H9(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H54(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::H10(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
-        &mut UnionHasher::Uninit => panic!("Uninitialized"),
+    match *handle {
+        UnionHasher::H2(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H3(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H4(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H5(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H5q7(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H5q5(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H6(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H9(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H54(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::H10(ref mut hasher) => StoreLookaheadThenStore(hasher, size, dict),
+        UnionHasher::Uninit => panic!("Uninitialized"),
     }
 }
 
@@ -1223,11 +1220,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
             }
         }
 
-        let has_optional_hasher = if let UnionHasher::Uninit = opt_hasher {
-            false
-        } else {
-            true
-        };
+        let has_optional_hasher = !matches!(opt_hasher, UnionHasher::Uninit);
         let max_dict_size: usize = (1usize << self.params.lgwin).wrapping_sub(16);
         self.hasher_ = opt_hasher;
         let mut dict_size: usize = size;
@@ -1477,9 +1470,11 @@ pub(crate) fn encoder_compress<
     if !is_fallback {
         let mut s_orig = BrotliEncoderStateStruct::new(core::mem::replace(m8, empty_m8));
         if is_9_5 {
-            let mut params = BrotliEncoderParams::default();
-            params.q9_5 = true;
-            params.quality = 10;
+            let mut params = BrotliEncoderParams {
+                q9_5: true,
+                quality: 10,
+                ..Default::default()
+            };
             ChooseHasher(&mut params);
             s_orig.hasher_ = BrotliMakeHasher(m8, &params, None /*no custom dict */);
         }
@@ -1528,7 +1523,7 @@ pub(crate) fn encoder_compress<
             return true;
         }
     }
-    assert_ne!(is_fallback, false);
+    assert!(is_fallback);
     *encoded_size = 0;
     if max_out_size == 0 {
         return false;
@@ -1609,15 +1604,15 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
             let delta: u64 = self.unprocessed_input_size();
             let tail: u64 = available_in as u64;
             let limit: u32 = 1u32 << 30;
-            let total: u32;
-            if delta >= u64::from(limit)
+            
+            let total: u32 = if delta >= u64::from(limit)
                 || tail >= u64::from(limit)
                 || delta.wrapping_add(tail) >= u64::from(limit)
             {
-                total = limit;
+                limit
             } else {
-                total = delta.wrapping_add(tail) as u32;
-            }
+                delta.wrapping_add(tail) as u32
+            };
             self.params.size_hint = total as usize;
         }
     }
@@ -1681,12 +1676,12 @@ fn GetHashTableInternal<'a, AllocI32: alloc::Allocator<i32>>(
 ) -> &'a mut [i32] {
     let max_table_size: usize = MaxHashTableSize(quality);
     let mut htsize: usize = HashTableSize(max_table_size, input_size);
-    let table: &mut [i32];
+    
     if quality == 0i32 && htsize & 0xaaaaausize == 0usize {
         htsize <<= 1i32;
     }
-    if htsize <= small_table_.len() {
-        table = &mut small_table_[..];
+    let table: &mut [i32] = if htsize <= small_table_.len() {
+        &mut small_table_[..]
     } else {
         if htsize > large_table_.slice().len() {
             //s.large_table_size_ = htsize;
@@ -1695,8 +1690,8 @@ fn GetHashTableInternal<'a, AllocI32: alloc::Allocator<i32>>(
             }
             *large_table_ = mi32.alloc_cell(htsize);
         }
-        table = large_table_.slice_mut();
-    }
+        large_table_.slice_mut()
+    };
     *table_size = htsize;
     for item in table[..htsize].iter_mut() {
         *item = 0;
@@ -1849,9 +1844,8 @@ fn ShouldUseComplexStaticContextMap(
         }
         entropy[1] = shannon_entropy(&combined_histo[..], 32).0;
         entropy[2] = 0.0;
-        for i in 0..13 {
-            assert!(i < 13);
-            entropy[2] += shannon_entropy(&context_histo[i][..], 32).0;
+        for context_row in context_histo[..13].iter() {
+            entropy[2] += shannon_entropy(&context_row[..], 32).0;
         }
         entropy[0] = 1.0 / (total as floatX);
         entropy[1] *= entropy[0];
@@ -1883,17 +1877,19 @@ fn DecideOverLiteralContextModeling(
     num_literal_contexts: &mut usize,
     literal_context_map: &mut &[u32],
 ) {
-    if quality < 5i32 || length < 64usize {
-    } else if ShouldUseComplexStaticContextMap(
-        input,
-        start_pos,
-        length,
-        mask,
-        quality,
-        size_hint,
-        num_literal_contexts,
-        literal_context_map,
-    ) {
+    if quality < 5i32
+        || length < 64usize
+        || ShouldUseComplexStaticContextMap(
+            input,
+            start_pos,
+            length,
+            mask,
+            quality,
+            size_hint,
+            num_literal_contexts,
+            literal_context_map,
+        )
+    {
     } else {
         let end_pos: usize = start_pos.wrapping_add(length);
         let mut bigram_prefix_histo = [0u32; 9];
@@ -2361,7 +2357,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
                 if self.params.quality == 0i32 {
                     compress_fragment_fast(
                         &mut self.m8,
-                        &mut data[((wrapped_last_processed_pos & mask) as usize)..],
+                        &data[((wrapped_last_processed_pos & mask) as usize)..],
                         bytes as usize,
                         is_last,
                         table,
@@ -2376,7 +2372,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
                 } else {
                     compress_fragment_two_pass(
                         &mut self.m8,
-                        &mut data[((wrapped_last_processed_pos & mask) as usize)..],
+                        &data[((wrapped_last_processed_pos & mask) as usize)..],
                         bytes as usize,
                         is_last,
                         self.command_buf_.slice_mut(),
@@ -2420,7 +2416,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
         InitOrStitchToPreviousBlock(
             &mut self.m8,
             &mut self.hasher_,
-            &mut self.ringbuffer_.data_mo.slice_mut()[self.ringbuffer_.buffer_index..],
+            &self.ringbuffer_.data_mo.slice_mut()[self.ringbuffer_.buffer_index..],
             mask as usize,
             self.custom_dictionary_size,
             &mut self.params,
@@ -2443,10 +2439,10 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
             dictionary,
             bytes as usize,
             wrapped_last_processed_pos as usize,
-            &mut self.ringbuffer_.data_mo.slice_mut()[self.ringbuffer_.buffer_index..],
+            &self.ringbuffer_.data_mo.slice_mut()[self.ringbuffer_.buffer_index..],
             mask as usize,
             self.custom_dictionary_size,
-            &mut self.params,
+            &self.params,
             &mut self.hasher_,
             &mut self.dist_cache_,
             &mut self.last_insert_len_,
@@ -2455,7 +2451,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
             &mut self.num_literals_,
         );
         {
-            let max_length: usize = MaxMetablockSize(&mut self.params);
+            let max_length: usize = MaxMetablockSize(&self.params);
             let max_literals: usize = max_length.wrapping_div(8);
             let max_commands: usize = max_length.wrapping_div(8);
             let processed_bytes: usize =
@@ -2496,13 +2492,13 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
 
             WriteMetaBlockInternal(
                 &mut self.m8,
-                &mut self.ringbuffer_.data_mo.slice_mut()[self.ringbuffer_.buffer_index..],
+                &self.ringbuffer_.data_mo.slice_mut()[self.ringbuffer_.buffer_index..],
                 mask as usize,
                 self.last_flush_pos_,
                 metablock_size as usize,
                 is_last,
                 literal_context_mode,
-                &mut self.params,
+                &self.params,
                 &mut self.literal_scratch_space,
                 &mut self.command_scratch_space,
                 &mut self.distance_scratch_space,
@@ -2511,7 +2507,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
                 self.num_literals_,
                 self.num_commands_,
                 self.commands_.slice_mut(),
-                &mut self.saved_dist_cache_,
+                &self.saved_dist_cache_,
                 &mut self.dist_cache_,
                 &mut self.recoder_state,
                 &mut storage_ix,
@@ -2768,7 +2764,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
                     && op == BrotliEncoderOperation::BROTLI_OPERATION_FLUSH;
                 let max_out_size: usize = (2usize).wrapping_mul(block_size).wrapping_add(503);
                 let mut inplace: i32 = 1i32;
-                let storage: &mut [u8];
+                
                 let mut storage_ix: usize = self.last_bytes_bits_ as usize;
                 let mut table_size: usize = 0;
 
@@ -2778,13 +2774,13 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
                         continue;
                     }
                 }
-                if max_out_size <= *available_out {
-                    storage = &mut next_out_array[*next_out_offset..]; //GetNextOut!(s);
+                let storage: &mut [u8] = if max_out_size <= *available_out {
+                    &mut next_out_array[*next_out_offset..] //GetNextOut!(s);
                 } else {
                     inplace = 0i32;
                     self.get_brotli_storage(max_out_size);
-                    storage = self.storage_.slice_mut();
-                }
+                    self.storage_.slice_mut()
+                };
                 storage[0] = self.last_bytes_ as u8;
                 storage[1] = (self.last_bytes_ >> 8) as u8;
                 let table: &mut [i32] =

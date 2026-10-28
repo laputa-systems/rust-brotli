@@ -1,3 +1,5 @@
+#![allow(clippy::excessive_precision)]
+#![allow(clippy::approx_constant)]
 use crate::enc::floatX;
 
 pub static logs_16: [floatX; 65536] = [

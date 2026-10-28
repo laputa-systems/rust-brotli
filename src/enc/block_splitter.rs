@@ -86,8 +86,8 @@ fn update_cost_and_signal(
 }
 fn CountLiterals(cmds: &[Command], num_commands: usize) -> usize {
     let mut total_length: usize = 0usize;
-    for i in 0usize..num_commands {
-        total_length = total_length.wrapping_add((cmds[i]).insert_len_ as usize);
+    for cmd in cmds[..num_commands].iter() {
+        total_length = total_length.wrapping_add(cmd.insert_len_ as usize);
     }
     total_length
 }
@@ -102,8 +102,8 @@ fn CopyLiteralsToByteArray(
 ) {
     let mut pos: usize = 0usize;
     let mut from_pos: usize = offset & mask;
-    for i in 0usize..num_commands {
-        let mut insert_len: usize = (cmds[i]).insert_len_ as usize;
+    for cmd in cmds[..num_commands].iter() {
+        let mut insert_len: usize = cmd.insert_len_ as usize;
         if from_pos.wrapping_add(insert_len) > mask {
             let head_size: usize = mask.wrapping_add(1).wrapping_sub(from_pos);
             literals[pos..(pos + head_size)]
@@ -119,7 +119,7 @@ fn CopyLiteralsToByteArray(
         }
         from_pos = from_pos
             .wrapping_add(insert_len)
-            .wrapping_add(cmds[i].copy_len() as usize)
+            .wrapping_add(cmd.copy_len() as usize)
             & mask;
     }
 }
@@ -147,7 +147,7 @@ fn InitialEntropyCodes<
     let mut seed: u32 = 7u32;
     let block_length: usize = length.wrapping_div(num_histograms);
     ClearHistograms(histograms, num_histograms);
-    for i in 0usize..num_histograms {
+    for (i, histogram) in histograms[..num_histograms].iter_mut().enumerate() {
         let mut pos: usize = length.wrapping_mul(i).wrapping_div(num_histograms);
         if i != 0usize {
             pos = pos.wrapping_add((MyRand(&mut seed) as usize).wrapping_rem(block_length));
@@ -155,7 +155,7 @@ fn InitialEntropyCodes<
         if pos.wrapping_add(stride) >= length {
             pos = length.wrapping_sub(stride).wrapping_sub(1);
         }
-        HistogramAddVector(&mut histograms[i], &data[pos..], stride);
+        HistogramAddVector(histogram, &data[pos..], stride);
     }
 }
 
@@ -209,7 +209,7 @@ fn RefineEntropyCodes<
         RandomSample(&mut seed, data, length, stride, &mut sample);
         HistogramAddHistogram(
             &mut histograms[iter.wrapping_rem(num_histograms)],
-            &mut sample,
+            &sample,
         );
     }
 }
@@ -247,16 +247,19 @@ where
     let mut num_blocks: usize = 1;
     let mut i: usize;
     if num_histograms <= 1 {
-        for i in 0usize..length {
-            block_id[i] = 0u8;
+        for block_id_item in block_id[..length].iter_mut() {
+            *block_id_item = 0u8;
         }
         return 1;
     }
     for item in insert_cost[..(data_size * num_histograms)].iter_mut() {
         *item = 0.0;
     }
-    for i in 0usize..num_histograms {
-        insert_cost[i] = FastLog2((histograms[i]).total_count() as u32 as (u64));
+    for (insert_cost_item, histogram) in insert_cost[..num_histograms]
+        .iter_mut()
+        .zip(histograms[..num_histograms].iter())
+    {
+        *insert_cost_item = FastLog2(histogram.total_count() as u32 as (u64));
     }
     i = data_size;
     while i != 0usize {
@@ -301,22 +304,21 @@ where
             }
         }
         let vectorized_offset = ((num_histograms >> 3) << 3);
-        let mut k = vectorized_offset;
         //remainder loop for
-        for insert_cost_iter in insert_cost
-            .split_at(insert_cost_ix + vectorized_offset)
-            .1
-            .split_at(num_histograms & 7)
-            .0
-            .iter()
-        {
+        for (k, insert_cost_iter) in (vectorized_offset..).zip(
+            insert_cost
+                .split_at(insert_cost_ix + vectorized_offset)
+                .1
+                .split_at(num_histograms & 7)
+                .0
+                .iter(),
+        ) {
             let cost_iter = &mut cost[(k >> 3)];
             cost_iter[k & 7] += *insert_cost_iter;
             if cost_iter[k & 7] < min_cost {
                 min_cost = cost_iter[k & 7];
                 *block_id_ptr = k as u8;
             }
-            k += 1;
         }
         if byte_ix < 2000usize {
             block_switch_cost *= (0.77 + 0.07 * (byte_ix as floatX) / 2000.0);
@@ -359,8 +361,8 @@ fn RemapBlockIds(
 ) -> usize {
     static kInvalidId: u16 = 256u16;
     let mut next_id: u16 = 0u16;
-    for i in 0usize..num_histograms {
-        new_id[i] = kInvalidId;
+    for new_id_item in new_id[..num_histograms].iter_mut() {
+        *new_id_item = kInvalidId;
     }
     for i in 0usize..length {
         if new_id[(block_ids[i] as usize)] as i32 == kInvalidId as i32 {
@@ -604,14 +606,14 @@ fn ClusterBlocks<
                 histogram_symbols.slice()[i.wrapping_sub(1)]
             };
             best_bits = BrotliHistogramBitCostDistance(
-                &mut histo,
-                &mut all_histograms.slice_mut()[(best_out as usize)],
+                &histo,
+                &all_histograms.slice_mut()[(best_out as usize)],
                 scratch_space,
             );
             for j in 0usize..num_final_clusters {
                 let cur_bits: floatX = BrotliHistogramBitCostDistance(
-                    &mut histo,
-                    &mut all_histograms.slice_mut()[(clusters.slice()[j] as usize)],
+                    &histo,
+                    &all_histograms.slice_mut()[(clusters.slice()[j] as usize)],
                     scratch_space,
                 );
                 if cur_bits < best_bits {
@@ -887,8 +889,12 @@ pub fn BrotliSplitBlock<
     }
     {
         let mut insert_and_copy_codes = allocate::<u16, _>(alloc, num_commands);
-        for i in 0..min(num_commands, cmds.len()) {
-            insert_and_copy_codes.slice_mut()[i] = (cmds[i]).cmd_prefix_;
+        let copy_len = min(num_commands, cmds.len());
+        for (code, cmd) in insert_and_copy_codes.slice_mut()[..copy_len]
+            .iter_mut()
+            .zip(cmds[..copy_len].iter())
+        {
+            *code = cmd.cmd_prefix_;
         }
         SplitByteVector::<HistogramCommand, Alloc, u16>(
             alloc,
@@ -907,8 +913,7 @@ pub fn BrotliSplitBlock<
     {
         let mut distance_prefixes = allocate::<u16, _>(alloc, num_commands);
         let mut j: usize = 0usize;
-        for i in 0usize..num_commands {
-            let cmd = &cmds[i];
+        for cmd in cmds[..num_commands].iter() {
             if cmd.copy_len() != 0 && cmd.cmd_prefix_ >= 128 {
                 distance_prefixes.slice_mut()[j] = cmd.dist_prefix_ & 0x03ff;
                 j = j.wrapping_add(1);

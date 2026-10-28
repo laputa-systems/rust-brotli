@@ -401,7 +401,7 @@ fn ShouldCompress(input: &[u8], input_size: usize, num_literals: usize) -> bool 
             }
             i = i.wrapping_add(43);
         }
-        BitsEntropy(&mut literal_histo[..], 256) < max_total_bit_cost
+        BitsEntropy(&literal_histo[..], 256) < max_total_bit_cost
     }
 }
 
@@ -475,14 +475,14 @@ fn BuildAndStoreCommandPrefixCode(
     memcpy(&mut cmd_depth[..], 40usize, depth, (8usize), 8usize);
     memcpy(&mut cmd_depth[..], 48usize, depth, (56usize), 8usize);
     memcpy(&mut cmd_depth[..], 56usize, depth, (16usize), 8usize);
-    BrotliConvertBitDepthsToSymbols(&mut cmd_depth[..], 64usize, &mut cmd_bits[..]);
+    BrotliConvertBitDepthsToSymbols(&cmd_depth[..], 64usize, &mut cmd_bits[..]);
     memcpy(bits, 0, &cmd_bits[..], 24usize, 16usize);
     memcpy(bits, (8usize), &cmd_bits[..], 40usize, 8usize);
     memcpy(bits, (16usize), &cmd_bits[..], 56usize, 8usize);
     memcpy(bits, (24usize), &cmd_bits[..], 0, 48usize);
     memcpy(bits, (48usize), &cmd_bits[..], 32usize, 8usize);
     memcpy(bits, (56usize), &cmd_bits[..], 48usize, 8usize);
-    BrotliConvertBitDepthsToSymbols(&mut depth[64..], 64usize, &mut bits[64..]);
+    BrotliConvertBitDepthsToSymbols(&depth[64..], 64usize, &mut bits[64..]);
     {
         for item in cmd_depth[..64].iter_mut() {
             *item = 0;
@@ -500,7 +500,7 @@ fn BuildAndStoreCommandPrefixCode(
                 depth[i.wrapping_add(16)];
         }
         BrotliStoreHuffmanTree(
-            &mut cmd_depth[..],
+            &cmd_depth[..],
             704usize,
             &mut tree[..],
             storage_ix,
@@ -508,7 +508,7 @@ fn BuildAndStoreCommandPrefixCode(
         );
     }
     BrotliStoreHuffmanTree(
-        &mut depth[64..],
+        &depth[64..],
         64usize,
         &mut tree[..],
         storage_ix,
@@ -591,14 +591,14 @@ fn StoreCommands<AllocHT: alloc::Allocator<HuffmanTree>>(
         *_lhs = (*_lhs).wrapping_add(_rhs as u32);
     }
     BuildAndStoreCommandPrefixCode(
-        &mut cmd_histo[..],
+        &cmd_histo[..],
         &mut cmd_depths[..],
         &mut cmd_bits[..],
         storage_ix,
         storage,
     );
-    for i in 0usize..num_commands {
-        let cmd: u32 = commands[i];
+    for command in commands[..num_commands].iter() {
+        let cmd: u32 = *command;
         let code: u32 = cmd & 0xffu32;
         let extra: u32 = cmd >> 8;
         BrotliWriteBits(

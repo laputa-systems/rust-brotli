@@ -86,7 +86,7 @@ impl<AllocU32: Allocator<u32>> Allocable<u32, AllocU32> for H10Buckets<AllocU32>
 
 impl<AllocU32: Allocator<u32>> PartialEq<H10Buckets<AllocU32>> for H10Buckets<AllocU32> {
     fn eq(&self, other: &H10Buckets<AllocU32>) -> bool {
-        return self.0.slice() == other.0.slice();
+        self.0.slice() == other.0.slice()
     }
 }
 
@@ -155,17 +155,17 @@ pub fn InitializeH10<AllocU32: Allocator<u32>>(
 }
 fn initialize_h10<
     AllocU32: Allocator<u32>,
-    Buckets: SliceWrapperMut<u32> + SliceWrapper<u32> + Allocable<u32, AllocU32>,
+    Buckets: SliceWrapperMut<u32>
+        + SliceWrapper<u32>
+        + Allocable<u32, AllocU32>
+        + PartialEq<Buckets>,
 >(
     m32: &mut AllocU32,
     one_shot: bool,
     params: &BrotliEncoderParams,
     input_size: usize,
     ringbuffer_break: Option<core::num::NonZeroUsize>,
-) -> H10<AllocU32, Buckets, H10DefaultParams>
-where
-    Buckets: PartialEq<Buckets>,
-{
+) -> H10<AllocU32, Buckets, H10DefaultParams> {
     let mut num_nodes = 1 << params.lgwin;
     if one_shot && input_size < num_nodes {
         num_nodes = input_size;
@@ -436,7 +436,10 @@ fn RightChildIndexH10<AllocU32: Allocator<u32>,
 
 pub fn StoreAndFindMatchesH10<
     AllocU32: Allocator<u32>,
-    Buckets: Allocable<u32, AllocU32> + SliceWrapperMut<u32> + SliceWrapper<u32>,
+    Buckets: Allocable<u32, AllocU32>
+        + SliceWrapperMut<u32>
+        + SliceWrapper<u32>
+        + PartialEq<Buckets>,
     Params: H10Params,
 >(
     xself: &mut H10<AllocU32, Buckets, Params>,
@@ -448,10 +451,7 @@ pub fn StoreAndFindMatchesH10<
     max_backward: usize,
     best_len: &mut usize,
     matches: &mut [u64],
-) -> usize
-where
-    Buckets: PartialEq<Buckets>,
-{
+) -> usize {
     let mut matches_offset = 0_usize;
     let cur_ix_masked = cur_ix & ring_buffer_mask;
     let max_comp_len = min(max_length, 128);

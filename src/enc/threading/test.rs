@@ -44,7 +44,7 @@ impl<U: Send + 'static> OwnedRetriever<U> for TestOwnedRetriever<U> {
         func: Func,
     ) -> Result<Output, PoisonedThreadError> {
         if self.fail_views {
-            Err(PoisonedThreadError::default())
+            Err(())
         } else {
             Ok(func(self.input.as_ref().unwrap()))
         }
@@ -216,8 +216,10 @@ fn compress_multi_joins_remaining_workers_after_join_error() {
         fail_views: false,
     };
     let mut alloc_per_thread = [test_alloc(), test_alloc(), test_alloc(), test_alloc()];
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 1;
+    let params = BrotliEncoderParams {
+        quality: 1,
+        ..Default::default()
+    };
     let mut owned_input = Owned::new(TestSlice(INPUT));
     let mut output = [0u8; 256];
 
@@ -247,8 +249,10 @@ fn compress_multi_joins_spawned_worker_after_setup_view_error() {
         fail_views: true,
     };
     let mut alloc_per_thread = [test_alloc(), test_alloc()];
-    let mut params = BrotliEncoderParams::default();
-    params.favor_cpu_efficiency = true;
+    let params = BrotliEncoderParams {
+        favor_cpu_efficiency: true,
+        ..Default::default()
+    };
     let mut owned_input = Owned::new(TestSlice(INPUT));
     let mut output = [0u8; 256];
 
@@ -283,9 +287,11 @@ fn compress_multi_preserves_first_worker_error_through_stream_phase() {
         compressed_error_index: Some(0),
     };
     let mut alloc_per_thread = [test_alloc(), test_alloc(), test_alloc()];
-    let mut params = BrotliEncoderParams::default();
-    params.quality = 1;
-    params.magic_number = true;
+    let params = BrotliEncoderParams {
+        quality: 1,
+        magic_number: true,
+        ..Default::default()
+    };
     let mut owned_input = Owned::new(TestSlice(INPUT));
     // Enough output that the healthy chunks could have concatted ok.
     let mut output = [0u8; 4096];

@@ -10,8 +10,8 @@ impl Compat16x16 {
         Compat16x16([a, a, a, a, a, a, a, a, a, a, a, a, a, a, a, a])
     }
     #[inline(always)]
-    pub fn to_simd(&self) -> Self {
-        *self
+    pub fn to_simd(self) -> Self {
+        self
     }
     #[inline(always)]
     pub fn simd_gt(&self, rhs: Compat16x16) -> Compat16x16 {
@@ -187,8 +187,8 @@ impl Compat32x8 {
             -((self[7] >= rhs[7]) as i32),
         ])
     }
-    pub fn to_simd(&self) -> Self {
-        *self
+    pub fn to_simd(self) -> Self {
+        self
     }
 }
 

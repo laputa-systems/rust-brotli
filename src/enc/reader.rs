@@ -177,18 +177,17 @@ impl<ErrType, R: CustomRead<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: Br
         }
     }
     pub fn into_inner(self) -> R {
-        match self {
-            CompressorReaderCustomIo {
-                input_buffer: _ib,
-                total_out: _to,
-                input_offset: _io,
-                input_len: _len,
-                input,
-                input_eof: _ieof,
-                error_if_invalid_data: _eiid,
-                state: _state,
-            } => input,
-        }
+        let CompressorReaderCustomIo {
+            input_buffer: _ib,
+            total_out: _to,
+            input_offset: _io,
+            input_len: _len,
+            input,
+            input_eof: _ieof,
+            error_if_invalid_data: _eiid,
+            state: _state,
+        } = self;
+        input
     }
     pub fn get_ref(&self) -> &R {
         &self.input
@@ -208,27 +207,24 @@ impl<ErrType, R: CustomRead<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: Br
         let mut avail_in = self.input_len - self.input_offset;
         while output_offset == 0 {
             if self.input_len < self.input_buffer.slice_mut().len() && !self.input_eof {
-                match self
-                    .input
-                    .read(&mut self.input_buffer.slice_mut()[self.input_len..])
                 {
-                    Err(e) => return Err(e),
-                    Ok(size) => {
-                        if size == 0 {
-                            self.input_eof = true;
-                        } else {
-                            self.input_len += size;
-                            avail_in = self.input_len - self.input_offset;
-                        }
+                    let size = self
+                    .input
+                    .read(&mut self.input_buffer.slice_mut()[self.input_len..])?;
+                    if size == 0 {
+                        self.input_eof = true;
+                    } else {
+                        self.input_len += size;
+                        avail_in = self.input_len - self.input_offset;
                     }
                 }
             }
-            let op: BrotliEncoderOperation;
-            if avail_in == 0 {
-                op = BrotliEncoderOperation::BROTLI_OPERATION_FINISH;
+            
+            let op: BrotliEncoderOperation = if avail_in == 0 {
+                BrotliEncoderOperation::BROTLI_OPERATION_FINISH
             } else {
-                op = BrotliEncoderOperation::BROTLI_OPERATION_PROCESS;
-            }
+                BrotliEncoderOperation::BROTLI_OPERATION_PROCESS
+            };
             let ret = self.state.0.compress_stream(
                 op,
                 &mut avail_in,

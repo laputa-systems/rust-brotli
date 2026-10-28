@@ -227,7 +227,7 @@ fn extract_single_cdf(cdf_bundle: &[u16], index: usize) -> [u16; 16] {
     assert_eq!(cdf_bundle.len(), 16 * NUM_SPEEDS_TO_TRY);
     assert!(index < NUM_SPEEDS_TO_TRY);
 
-    #[allow(clippy::identity_op)]
+    #[allow(clippy::identity_op, clippy::erasing_op)]
     [
         cdf_bundle[index + 0 * NUM_SPEEDS_TO_TRY],
         cdf_bundle[index + 1 * NUM_SPEEDS_TO_TRY],
@@ -252,10 +252,10 @@ fn min_cost_index_for_speed(cost: &[floatX]) -> usize {
     assert_eq!(cost.len(), NUM_SPEEDS_TO_TRY);
     let mut min_cost = cost[0];
     let mut best_choice = 0;
-    for i in 1..NUM_SPEEDS_TO_TRY {
-        if cost[i] < min_cost {
+    for (i, cost_item) in cost.iter().enumerate().skip(1) {
+        if *cost_item < min_cost {
             best_choice = i;
-            min_cost = cost[i];
+            min_cost = *cost_item;
         }
     }
     best_choice
@@ -389,12 +389,12 @@ impl<'a, Alloc: alloc::Allocator<u16> + alloc::Allocator<u32> + alloc::Allocator
         } else {
             1
         };
-        for high in 0..2 {
+        for (high, ret_item) in ret.iter_mut().enumerate() {
             /*eprintln!("TRIAL {} {}", cm, combined);
             for i in 0..NUM_SPEEDS_TO_TRY {
                 eprintln!("{},{} costs {:?}", SPEEDS_TO_SEARCH[i], MAXES_TO_SEARCH[i], self.singleton_costs[cost_type_index][high][i]);
             }*/
-            ret[high] = min_cost_speed_max(&self.singleton_costs[cost_type_index][high][..]);
+            *ret_item = min_cost_speed_max(&self.singleton_costs[cost_type_index][high][..]);
         }
         ret
     }
@@ -411,8 +411,8 @@ impl<'a, Alloc: alloc::Allocator<u16> + alloc::Allocator<u32> + alloc::Allocator
             1
         };
         let mut ret = [0.0; 2];
-        for high in 0..2 {
-            ret[high] = min_cost_value(&self.singleton_costs[cost_type_index][high][..]);
+        for (high, ret_item) in ret.iter_mut().enumerate() {
+            *ret_item = min_cost_value(&self.singleton_costs[cost_type_index][high][..]);
         }
         ret
     }

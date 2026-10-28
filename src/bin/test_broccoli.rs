@@ -174,8 +174,10 @@ fn test_appendonly_twice_fails() {
     ];
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = true;
+        let params0 = BrotliEncoderParams {
+            appendable: true,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
     }
     concat(&mut files[..], &mut ufiles[..], None, 2);
@@ -187,10 +189,12 @@ fn test_append_then_empty_works() {
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     let mut first = true;
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = first;
-        params0.catable = !first;
-        params0.use_dictionary = first;
+        let params0 = BrotliEncoderParams {
+            appendable: first,
+            catable: !first,
+            use_dictionary: first,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
         first = false;
     }
@@ -206,10 +210,12 @@ fn test_append_then_cat_works() {
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     let mut first = true;
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = first;
-        params0.catable = !first;
-        params0.use_dictionary = first;
+        let params0 = BrotliEncoderParams {
+            appendable: first,
+            catable: !first,
+            use_dictionary: first,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
         first = false;
     }
@@ -222,10 +228,12 @@ fn test_one_byte_works() {
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     let mut first = true;
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = first;
-        params0.catable = !first;
-        params0.use_dictionary = first;
+        let params0 = BrotliEncoderParams {
+            appendable: first,
+            catable: !first,
+            use_dictionary: first,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
         first = false;
     }
@@ -238,10 +246,12 @@ fn test_one_byte_before_works() {
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     let mut first = true;
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = first;
-        params0.catable = !first;
-        params0.use_dictionary = first;
+        let params0 = BrotliEncoderParams {
+            appendable: first,
+            catable: !first,
+            use_dictionary: first,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
         first = false;
     }
@@ -257,10 +267,12 @@ fn test_two_byte_works() {
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     let mut first = true;
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = first;
-        params0.catable = !first;
-        params0.use_dictionary = first;
+        let params0 = BrotliEncoderParams {
+            appendable: first,
+            catable: !first,
+            use_dictionary: first,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
         first = false;
     }
@@ -276,10 +288,12 @@ fn test_two_byte_before_works() {
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     let mut first = true;
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = first;
-        params0.catable = !first;
-        params0.use_dictionary = first;
+        let params0 = BrotliEncoderParams {
+            appendable: first,
+            catable: !first,
+            use_dictionary: first,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
         first = false;
     }
@@ -292,10 +306,12 @@ fn test_empty_then_cat_works() {
     let mut ufiles = [UnlimitedBuffer::new(&[]), UnlimitedBuffer::new(&[])];
     let mut first = true;
     for (src, dst) in files.iter_mut().zip(ufiles.iter_mut()) {
-        let mut params0 = BrotliEncoderParams::default();
-        params0.appendable = first;
-        params0.catable = !first;
-        params0.use_dictionary = first;
+        let params0 = BrotliEncoderParams {
+            appendable: first,
+            catable: !first,
+            use_dictionary: first,
+            ..Default::default()
+        };
         super::compress(src, dst, 4096, &params0, &[], 1).unwrap();
         first = false;
     }
@@ -345,7 +361,7 @@ fn test_concat() {
     params0.large_window = true;
 
     let mut options = [params0, params1, params2, params3, params4, params5];
-    for option in options.iter_mut().skip(3) {
+    if let Some(option) = options.get_mut(3) {
         let mut ufiles = [
             UnlimitedBuffer::new(&[]),
             UnlimitedBuffer::new(&[]),
@@ -466,11 +482,13 @@ fn test_bytealign_appendable_with_bare() {
     ];
 
     // First file: bare + appendable (header, no trailer)
-    let mut params_base = BrotliEncoderParams::default();
-    params_base.bare_stream = true;
-    params_base.byte_align = true; // implied by -bare
-    params_base.appendable = true;
-    params_base.lgwin = 22;
+    let params_base = BrotliEncoderParams {
+        bare_stream: true,
+        byte_align: true, // implied by -bare
+        appendable: true,
+        lgwin: 22,
+        ..Default::default()
+    };
     super::compress(
         &mut files[0],
         &mut brotli_files[0],
@@ -484,13 +502,15 @@ fn test_bytealign_appendable_with_bare() {
 
     // Subsequent files: bare streams (no header)
     for i in 1..files.len() {
-        let mut params_bare = BrotliEncoderParams::default();
-        params_bare.bare_stream = true;
-        params_bare.byte_align = true; // implied by -bare
-        params_bare.catable = true;
-        params_bare.use_dictionary = false; // implied by -catable
-        params_bare.appendable = true; // implied by -catable
-        params_bare.lgwin = 22;
+        let params_bare = BrotliEncoderParams {
+            bare_stream: true,
+            byte_align: true, // implied by -bare
+            catable: true,
+            use_dictionary: false, // implied by -catable
+            appendable: true, // implied by -catable
+            lgwin: 22,
+            ..Default::default()
+        };
         super::compress(
             &mut files[i],
             &mut brotli_files[i],
@@ -522,11 +542,13 @@ fn test_bare_any_order() {
     ];
 
     // Base file
-    let mut params_base = BrotliEncoderParams::default();
-    params_base.bare_stream = true;
-    params_base.byte_align = true;
-    params_base.appendable = true;
-    params_base.lgwin = 22;
+    let params_base = BrotliEncoderParams {
+        bare_stream: true,
+        byte_align: true,
+        appendable: true,
+        lgwin: 22,
+        ..Default::default()
+    };
     super::compress(
         &mut files[0],
         &mut brotli_files[0],
@@ -540,13 +562,15 @@ fn test_bare_any_order() {
 
     // Create bare streams
     for i in 1..files.len() {
-        let mut params_bare = BrotliEncoderParams::default();
-        params_bare.bare_stream = true;
-        params_bare.byte_align = true;
-        params_bare.catable = true;
-        params_bare.use_dictionary = false;
-        params_bare.appendable = true;
-        params_bare.lgwin = 22;
+        let params_bare = BrotliEncoderParams {
+            bare_stream: true,
+            byte_align: true,
+            catable: true,
+            use_dictionary: false,
+            appendable: true,
+            lgwin: 22,
+            ..Default::default()
+        };
         super::compress(
             &mut files[i],
             &mut brotli_files[i],
@@ -599,11 +623,13 @@ fn test_bytealign_with_empty() {
     ];
 
     // First file: appendable + bytealign
-    let mut params_base = BrotliEncoderParams::default();
-    params_base.bare_stream = true;
-    params_base.byte_align = true;
-    params_base.appendable = true;
-    params_base.lgwin = 22;
+    let params_base = BrotliEncoderParams {
+        bare_stream: true,
+        byte_align: true,
+        appendable: true,
+        lgwin: 22,
+        ..Default::default()
+    };
     super::compress(
         &mut files[0],
         &mut brotli_files[0],
@@ -617,13 +643,15 @@ fn test_bytealign_with_empty() {
 
     // Remaining files: bare
     for i in 1..files.len() {
-        let mut params_bare = BrotliEncoderParams::default();
-        params_bare.bare_stream = true;
-        params_bare.byte_align = true;
-        params_bare.catable = true;
-        params_bare.use_dictionary = false;
-        params_bare.appendable = true;
-        params_bare.lgwin = 22;
+        let params_bare = BrotliEncoderParams {
+            bare_stream: true,
+            byte_align: true,
+            catable: true,
+            use_dictionary: false,
+            appendable: true,
+            lgwin: 22,
+            ..Default::default()
+        };
         super::compress(
             &mut files[i],
             &mut brotli_files[i],
@@ -656,11 +684,13 @@ fn test_bytealign_various_data() {
     ];
 
     // First file: appendable + bytealign
-    let mut params_base = BrotliEncoderParams::default();
-    params_base.bare_stream = true;
-    params_base.byte_align = true;
-    params_base.appendable = true;
-    params_base.lgwin = 22;
+    let mut params_base = BrotliEncoderParams {
+        bare_stream: true,
+        byte_align: true,
+        appendable: true,
+        lgwin: 22,
+        ..Default::default()
+    };
     light_debug_test(&mut params_base);
     super::compress(
         &mut files[0],
@@ -675,13 +705,15 @@ fn test_bytealign_various_data() {
 
     // Remaining files: bare
     for i in 1..files.len() {
-        let mut params_bare = BrotliEncoderParams::default();
-        params_bare.bare_stream = true;
-        params_bare.byte_align = true;
-        params_bare.catable = true;
-        params_bare.use_dictionary = false;
-        params_bare.appendable = true;
-        params_bare.lgwin = 22;
+        let mut params_bare = BrotliEncoderParams {
+            bare_stream: true,
+            byte_align: true,
+            catable: true,
+            use_dictionary: false,
+            appendable: true,
+            lgwin: 22,
+            ..Default::default()
+        };
         light_debug_test(&mut params_bare);
         super::compress(
             &mut files[i],

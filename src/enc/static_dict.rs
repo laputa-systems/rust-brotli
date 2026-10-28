@@ -345,10 +345,10 @@ pub fn BrotliFindAllStaticDictionaryMatches(
                         matches,
                     );
                     if l.wrapping_add(2) < max_length
-                        && (data[(l.wrapping_sub(1) as usize)] as i32 == b'i' as i32)
-                        && (data[(l as usize)] as i32 == b'n' as i32)
-                        && (data[(l.wrapping_add(1) as usize)] as i32 == b'g' as i32)
-                        && (data[(l.wrapping_add(2) as usize)] as i32 == b' ' as i32)
+                        && (data[l.wrapping_sub(1)] as i32 == b'i' as i32)
+                        && (data[l] as i32 == b'n' as i32)
+                        && (data[l.wrapping_add(1)] as i32 == b'g' as i32)
+                        && (data[l.wrapping_add(2)] as i32 == b' ' as i32)
                     {
                         //eprint!("Cdding match {} {} {}\n", w.len(), w.transform(), w.idx());
                         AddMatch(
@@ -381,7 +381,7 @@ pub fn BrotliFindAllStaticDictionaryMatches(
                 if matchlen < l || l.wrapping_add(6) >= max_length {
                     continue;
                 }
-                let s: &[u8] = data.split_at(l as usize).1;
+                let s: &[u8] = data.split_at(l).1;
                 if s[0] as i32 == b' ' as i32 {
                     //eprint!("Edding match {} {} {} {}\n", w.len(), w.transform(), w.idx(), len);
                     AddMatch(id.wrapping_add(n), l.wrapping_add(1), l, matches);
@@ -834,7 +834,7 @@ pub fn BrotliFindAllStaticDictionaryMatches(
                 if l.wrapping_add(1) >= max_length {
                     continue;
                 }
-                let s: &[u8] = data.split_at(l as usize).1;
+                let s: &[u8] = data.split_at(l).1;
                 if s[0] as i32 == b' ' as i32 {
                     //eprint!("AWdding match {} {} {} {}\n", w.len(), w.transform(), w.idx(), 666);
                     AddMatch(
@@ -988,7 +988,7 @@ pub fn BrotliFindAllStaticDictionaryMatches(
                 if l.wrapping_add(2) >= max_length {
                     continue;
                 }
-                let s: &[u8] = data.split_at(l.wrapping_add(1) as usize).1;
+                let s: &[u8] = data.split_at(l.wrapping_add(1)).1;
                 if s[0] as i32 == b' ' as i32 {
                     //eprint!("BIdding match {} {} {} {}\n", w.len(), w.transform(), w.idx(), 666);
                     AddMatch(
@@ -1198,7 +1198,7 @@ pub fn BrotliFindAllStaticDictionaryMatches(
                     );
                     has_found_match = 1i32;
                 } else if l.wrapping_add(2) < max_length
-                    && (data[(l.wrapping_add(2) as usize)] as i32 == b' ' as i32)
+                    && (data[l.wrapping_add(2)] as i32 == b' ' as i32)
                 {
                     let t: usize = (if data[0] as i32 == b'e' as i32 {
                         18i32
@@ -1266,7 +1266,7 @@ pub fn BrotliFindAllStaticDictionaryMatches(
                 );
                 has_found_match = 1i32;
                 if l.wrapping_add(5) < max_length {
-                    let s: &[u8] = data.split_at(l.wrapping_add(5) as usize).1;
+                    let s: &[u8] = data.split_at(l.wrapping_add(5)).1;
                     if data[0] as i32 == b' ' as i32
                         && l.wrapping_add(8) < max_length
                         && (s[0] as i32 == b' ' as i32)

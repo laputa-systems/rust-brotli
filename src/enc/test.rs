@@ -1,10 +1,12 @@
 #![cfg(test)]
+#![allow(semicolon_in_expressions_from_non_local_macros)]
 
 extern crate alloc_no_stdlib;
 extern crate brotli_decompressor;
 extern "C" {
     fn calloc(n_elem: usize, el_size: usize) -> *mut u8;
 }
+#[allow(suspicious_runtime_symbol_definitions)]
 extern "C" {
     fn free(ptr: *mut u8);
 }
@@ -163,12 +165,12 @@ fn oneshot_compress(
                 panic!("No output buffer space");
             }
             let mut total_out = Some(0);
-            let op: BrotliEncoderOperation;
-            if available_in == input.len() - next_in_offset {
-                op = BrotliEncoderOperation::BROTLI_OPERATION_FINISH;
+            
+            let op: BrotliEncoderOperation = if available_in == input.len() - next_in_offset {
+                BrotliEncoderOperation::BROTLI_OPERATION_FINISH
             } else {
-                op = BrotliEncoderOperation::BROTLI_OPERATION_PROCESS;
-            }
+                BrotliEncoderOperation::BROTLI_OPERATION_PROCESS
+            };
             let mut nop_callback =
                 |_data: &mut interface::PredictionModeContextMap<interface::InputReferenceMut>,
                  _cmds: &mut [interface::StaticCommand],
@@ -305,7 +307,7 @@ fn oneshot(
         //return (BrotliResult::ResultFailure, 0, 0);
         available_in = compressed.len();
     }
-    let ret = oneshot_decompress(&mut compressed[..available_in], output);
+    let ret = oneshot_decompress(&compressed[..available_in], output);
     unlock_if_32bit();
     ret
 }
@@ -315,13 +317,9 @@ fn test_roundtrip_10x10y() {
     const BUFFER_SIZE: usize = 128;
     let mut compressed: [u8; 13] = [0; 13];
     let mut output = [0u8; BUFFER_SIZE];
-    let mut input = [
-        'x' as u8, 'x' as u8, 'x' as u8, 'x' as u8, 'x' as u8, 'x' as u8, 'x' as u8, 'x' as u8,
-        'x' as u8, 'x' as u8, 'y' as u8, 'y' as u8, 'y' as u8, 'y' as u8, 'y' as u8, 'y' as u8,
-        'y' as u8, 'y' as u8, 'y' as u8, 'y' as u8,
-    ];
+    let input = *b"xxxxxxxxxxyyyyyyyyyy";
     let (result, compressed_offset, output_offset) = oneshot(
-        &mut input[..],
+        &input[..],
         &mut compressed,
         &mut output[..],
         9,
@@ -332,12 +330,12 @@ fn test_roundtrip_10x10y() {
     );
     match result {
         BrotliResult::ResultSuccess => {}
-        _ => assert!(false),
+        _ => unreachable!(),
     }
     let mut i: usize = 0;
     while i < 10 {
-        assert_eq!(output[i], 'x' as u8);
-        assert_eq!(output[i + 10], 'y' as u8);
+        assert_eq!(output[i], b'x');
+        assert_eq!(output[i + 10], b'y');
         i += 1;
     }
     assert_eq!(output_offset, 20);
@@ -542,9 +540,9 @@ fn test_roundtrip_x() {
     const BUFFER_SIZE: usize = 16384;
     let mut compressed: [u8; 6] = [0x0b, 0x00, 0x80, 0x58, 0x03, 0];
     let mut output = [0u8; BUFFER_SIZE];
-    let mut input = ['X' as u8];
+    let input = *b"X";
     let (result, compressed_offset, output_offset) = oneshot(
-        &mut input[..],
+        &input[..],
         &mut compressed[..],
         &mut output[..],
         9,
@@ -555,9 +553,9 @@ fn test_roundtrip_x() {
     );
     match result {
         BrotliResult::ResultSuccess => {}
-        _ => assert!(false),
+        _ => unreachable!(),
     }
-    assert_eq!(output[0], 'X' as u8);
+    assert_eq!(output[0], b'X');
     assert_eq!(output_offset, 1);
     assert_eq!(compressed_offset, compressed.len());
 }
@@ -567,7 +565,7 @@ fn test_roundtrip_empty() {
     let mut compressed: [u8; 2] = [0x06, 0];
     let mut output = [0u8; 1];
     let (result, compressed_offset, output_offset) = oneshot(
-        &mut [],
+        &[],
         &mut compressed[..],
         &mut output[..],
         9,
@@ -578,7 +576,7 @@ fn test_roundtrip_empty() {
     );
     match result {
         BrotliResult::ResultSuccess => {}
-        _ => assert!(false),
+        _ => unreachable!(),
     }
     assert_eq!(output_offset, 0);
     assert_eq!(compressed_offset, compressed.len());

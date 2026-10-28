@@ -202,16 +202,16 @@ impl<U: Send + 'static> OwnedRetriever<U> for std::sync::Arc<std::sync::RwLock<U
     fn view<T, F: FnOnce(&U) -> T>(&self, f: F) -> Result<T, PoisonedThreadError> {
         match self.read() {
             Ok(ref u) => Ok(f(u)),
-            Err(_) => Err(PoisonedThreadError::default()),
+            Err(_) => Err(()),
         }
     }
     fn unwrap(self) -> Result<U, PoisonedThreadError> {
         match std::sync::Arc::try_unwrap(self) {
             Ok(rwlock) => match rwlock.into_inner() {
                 Ok(u) => Ok(u),
-                Err(_) => Err(PoisonedThreadError::default()),
+                Err(_) => Err(()),
             },
-            Err(_) => Err(PoisonedThreadError::default()),
+            Err(_) => Err(()),
         }
     }
 }
@@ -470,7 +470,8 @@ where
             false,
         );
         let mut setup_error = false;
-        for thread_index in 1..num_threads {
+        for (offset, alloc_item) in alloc_per_thread[1..num_threads].iter_mut().enumerate() {
+            let thread_index = offset + 1;
             let res = spawner_and_input.view(|input_and_params: &(SliceW, BrotliEncoderParams)| {
                 let range = get_range(thread_index - 1, num_threads, input_and_params.0.len());
                 let overlap = hasher.StoreLookahead().wrapping_sub(1);
@@ -478,11 +479,7 @@ where
                     hasher.BulkStoreRange(
                         input_and_params.0.slice(),
                         usize::MAX,
-                        if range.start > overlap {
-                            range.start - overlap
-                        } else {
-                            0
-                        },
+                        range.start.saturating_sub(overlap),
                         range.end - overlap,
                     );
                 }
@@ -493,12 +490,12 @@ where
             }
             if thread_index + 1 != num_threads {
                 {
-                    let (alloc, out_hasher) = alloc_per_thread[thread_index].unwrap_view_mut();
+                    let (alloc, out_hasher) = alloc_item.unwrap_view_mut();
                     *out_hasher = hasher.clone_with_alloc(alloc);
                 }
                 thread_spawner.spawn(
                     &mut spawner_and_input,
-                    &mut alloc_per_thread[thread_index],
+                    alloc_item,
                     thread_index,
                     num_threads,
                     compress_part,
@@ -544,10 +541,14 @@ where
       });
     } else {
         if num_threads > 1 {
-            for thread_index in 1..num_threads - 1 {
+            for (offset, alloc_item) in alloc_per_thread[1..num_threads - 1]
+                .iter_mut()
+                .enumerate()
+            {
+                let thread_index = offset + 1;
                 thread_spawner.spawn(
                     &mut spawner_and_input,
-                    &mut alloc_per_thread[thread_index],
+                    alloc_item,
                     thread_index,
                     num_threads,
                     compress_part,

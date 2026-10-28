@@ -418,10 +418,12 @@ impl BroCatli {
                 }
                 let num_whole_bytes_to_copy =
                     usize::from(new_stream_pending.num_bytes_read) - whole_byte_source;
-                for aligned_index in 0..num_whole_bytes_to_copy {
-                    realigned_header[whole_byte_destination + aligned_index] =
-                        new_stream_pending.bytes_so_far[whole_byte_source + aligned_index];
-                }
+                realigned_header[whole_byte_destination
+                    ..(num_whole_bytes_to_copy + whole_byte_destination)]
+                    .copy_from_slice(
+                        &new_stream_pending.bytes_so_far[whole_byte_source
+                            ..(num_whole_bytes_to_copy + whole_byte_source)],
+                    );
                 out_bytes[*out_offset] = realigned_header[0];
                 self.any_bytes_emitted = true;
                 *out_offset += 1;
@@ -460,7 +462,7 @@ impl BroCatli {
             self.any_bytes_emitted = true;
         }
         new_stream_pending.num_bytes_written =
-            Some((new_stream_pending.num_bytes_written.unwrap() + to_copy as u8));
+            Some(new_stream_pending.num_bytes_written.unwrap() + to_copy as u8);
         if new_stream_pending.num_bytes_written.unwrap() != new_stream_pending.num_bytes_read {
             self.new_stream_pending = Some(new_stream_pending);
             return BroCatliResult::NeedsMoreOutput;
@@ -732,7 +734,7 @@ mod test {
         broccoli = BroCatli::deserialize_from_buffer(&buffer).unwrap();
         broccoli.serialize_to_buffer(&mut buffer2[..]).unwrap();
         broccoli = BroCatli::deserialize_from_buffer(&buffer2).unwrap();
-        for (_index, item) in buffer.iter_mut().enumerate() {
+        for item in buffer.iter_mut() {
             *item = 0;
         }
         broccoli.serialize_to_buffer(&mut buffer[..]).unwrap();
@@ -744,7 +746,7 @@ mod test {
         broccoli = BroCatli::deserialize_from_buffer(&buffer).unwrap();
         broccoli.serialize_to_buffer(&mut buffer2[..]).unwrap();
         broccoli = BroCatli::deserialize_from_buffer(&buffer2).unwrap();
-        for (_index, item) in buffer.iter_mut().enumerate() {
+        for item in buffer.iter_mut() {
             *item = 0;
         }
         broccoli.serialize_to_buffer(&mut buffer[..]).unwrap();
@@ -777,7 +779,7 @@ mod test {
     }
     #[test]
     fn test_cat_empty_stream() {
-        let empty_catable = [b';'];
+        let empty_catable = *b";";
         let mut bcat = super::BroCatli::default();
         let mut in_offset = 0usize;
         let mut out_bytes = [0u8; 32];
@@ -802,11 +804,11 @@ mod test {
         res = bcat.finish(&mut out_bytes[..], &mut out_offset);
         assert_eq!(res, super::BroCatliResult::Success);
         assert_ne!(out_offset, 0);
-        assert_eq!(&out_bytes[..out_offset], &[b';']);
+        assert_eq!(&out_bytes[..out_offset], b";");
     }
     #[test]
     fn test_cat_truncated_metadata_header_fails() {
-        let empty_catable = [b';'];
+        let empty_catable = *b";";
         let mut bcat = super::BroCatli::new_with_window_size(22);
         let mut in_offset = 0usize;
         let mut out_bytes = [0u8; 32];

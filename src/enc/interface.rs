@@ -623,6 +623,9 @@ impl SliceOffset {
     pub fn len(&self) -> usize {
         self.1 as usize
     }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     pub fn len32(&self) -> u32 {
         self.1
     }

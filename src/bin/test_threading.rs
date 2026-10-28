@@ -32,9 +32,11 @@ fn multi_threaded_split_compression_test(
     catable: bool,
     expected_size: usize,
 ) {
-    let mut params = BrotliEncoderParams::default();
-    params.quality = quality;
-    params.magic_number = true;
+    let mut params = BrotliEncoderParams {
+        quality,
+        magic_number: true,
+        ..Default::default()
+    };
     if catable {
         params.catable = true;
         params.use_dictionary = false;
@@ -133,9 +135,11 @@ fn thread_spawn_per_job_split_compression_test(
     catable: bool,
     expected_size: usize,
 ) {
-    let mut params = BrotliEncoderParams::default();
-    params.quality = quality;
-    params.magic_number = true;
+    let mut params = BrotliEncoderParams {
+        quality,
+        magic_number: true,
+        ..Default::default()
+    };
     if catable {
         params.catable = true;
         params.use_dictionary = false;

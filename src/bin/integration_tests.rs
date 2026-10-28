@@ -624,8 +624,8 @@ fn writer_helper(mut in_buf: &[u8], buf_size: usize, q: u32, lgwin: u32, do_flus
             }
         }
         assert_eq!(output.data.len(), original_buf.len());
-        for i in 0..min(original_buf.len(), output.data.len()) {
-            assert_eq!(output.data[i], original_buf[i]);
+        for (output_item, original_item) in output.data.iter().zip(original_buf.iter()) {
+            assert_eq!(output_item, original_item);
         }
         in_buf = original_buf;
         let mut compressed = UnlimitedBuffer::new(&[]);
@@ -675,8 +675,8 @@ fn into_inner_writer_helper(mut in_buf: &[u8], buf_size: usize, q: u32, lgwin: u
         Ok(_) => {}
         Err(e) => panic!("Error {:?}", e),
     }
-    for i in 0..orig_buf.len() {
-        assert_eq!(output.data[i], orig_buf[i]);
+    for (output_item, orig_item) in output.data.iter().zip(orig_buf.iter()) {
+        assert_eq!(output_item, orig_item);
     }
     assert_eq!(output.data.len(), orig_buf.len());
 }
