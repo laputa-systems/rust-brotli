@@ -75,8 +75,7 @@ impl<'a> Cdf<'a> {
         if self.cdf[15] >= speed.1 {
             const CDF_BIAS: [u16; 16] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             for (tmp, bias) in self.cdf[..16].iter_mut().zip(CDF_BIAS[..16].iter()) {
-                *tmp = (tmp.wrapping_add(*bias))
-                    .wrapping_sub(tmp.wrapping_add(*bias) >> 2);
+                *tmp = (tmp.wrapping_add(*bias)).wrapping_sub(tmp.wrapping_add(*bias) >> 2);
             }
         }
     }

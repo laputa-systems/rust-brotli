@@ -1,5 +1,5 @@
 #![cfg_attr(feature = "benchmark", feature(test))]
-#![allow(semicolon_in_expressions_from_non_local_macros)]
+#![allow(future_incompatible)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
 

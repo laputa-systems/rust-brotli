@@ -244,7 +244,9 @@ impl<ErrType, W: CustomWrite<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: B
         self.output.as_mut().unwrap()
     }
     pub fn into_inner(mut self) -> W {
-        let _ = self.flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH).is_ok();
+        let _ = self
+            .flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH)
+            .is_ok();
         self.output.take().unwrap()
     }
 }
@@ -254,7 +256,9 @@ impl<ErrType, W: CustomWrite<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: B
 {
     fn drop(&mut self) {
         if self.output.is_some() {
-            let _ = self.flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH).is_ok();
+            let _ = self
+                .flush_or_close(BrotliEncoderOperation::BROTLI_OPERATION_FINISH)
+                .is_ok();
         }
         BrotliEncoderDestroyInstance(&mut self.state);
     }

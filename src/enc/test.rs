@@ -1,11 +1,11 @@
 #![cfg(test)]
-#![allow(semicolon_in_expressions_from_non_local_macros)]
 
 extern crate alloc_no_stdlib;
 extern crate brotli_decompressor;
 extern "C" {
     fn calloc(n_elem: usize, el_size: usize) -> *mut u8;
 }
+#[allow(unknown_lints)]
 #[allow(suspicious_runtime_symbol_definitions)]
 extern "C" {
     fn free(ptr: *mut u8);
@@ -165,7 +165,7 @@ fn oneshot_compress(
                 panic!("No output buffer space");
             }
             let mut total_out = Some(0);
-            
+
             let op: BrotliEncoderOperation = if available_in == input.len() - next_in_offset {
                 BrotliEncoderOperation::BROTLI_OPERATION_FINISH
             } else {

@@ -31,7 +31,9 @@ fn main() {
                             Ok(_) => break,
                         }
                     }
-                    if let Err(e) = writer.write_all(&buf[..size]) { panic!("{}", e) }
+                    if let Err(e) = writer.write_all(&buf[..size]) {
+                        panic!("{}", e)
+                    }
                 }
             }
         }

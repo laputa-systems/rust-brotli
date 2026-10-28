@@ -261,10 +261,7 @@ impl<AllocF: Allocator<floatX>> ZopfliCostModel<AllocF> {
 
 pub fn StitchToPreviousBlockH10<
     AllocU32: Allocator<u32>,
-    Buckets: Allocable<u32, AllocU32>
-        + SliceWrapperMut<u32>
-        + SliceWrapper<u32>
-        + PartialEq<Buckets>,
+    Buckets: Allocable<u32, AllocU32> + SliceWrapperMut<u32> + SliceWrapper<u32> + PartialEq<Buckets>,
     Params: H10Params,
 >(
     handle: &mut H10<AllocU32, Buckets, Params>,
@@ -308,10 +305,7 @@ pub fn StitchToPreviousBlockH10<
 }
 fn FindAllMatchesH10<
     AllocU32: Allocator<u32>,
-    Buckets: Allocable<u32, AllocU32>
-        + SliceWrapperMut<u32>
-        + SliceWrapper<u32>
-        + PartialEq<Buckets>,
+    Buckets: Allocable<u32, AllocU32> + SliceWrapperMut<u32> + SliceWrapper<u32> + PartialEq<Buckets>,
     Params: H10Params,
 >(
     handle: &mut H10<AllocU32, Buckets, Params>,
@@ -711,7 +705,7 @@ fn UpdateNodes<AllocF: Allocator<floatX>>(
             let backward: usize = (posdata.distance_cache[(idx & distance_cache_len_minus_1)]
                 + i32::from(kDistanceCacheOffset[j])) as usize;
             let mut prev_ix: usize = cur_ix.wrapping_sub(backward);
-            
+
             let continuation: u8 = ringbuffer[cur_ix_masked.wrapping_add(best_len)];
             /*
             if let Some(breakpoint) = ringbuffer_break {
@@ -866,10 +860,7 @@ fn ComputeShortestPathFromNodes(num_bytes: usize, nodes: &mut [ZopfliNode]) -> u
 const MAX_NUM_MATCHES_H10: usize = 128;
 pub fn BrotliZopfliComputeShortestPath<
     AllocU32: Allocator<u32>,
-    Buckets: Allocable<u32, AllocU32>
-        + SliceWrapperMut<u32>
-        + SliceWrapper<u32>
-        + PartialEq<Buckets>,
+    Buckets: Allocable<u32, AllocU32> + SliceWrapperMut<u32> + SliceWrapper<u32> + PartialEq<Buckets>,
     Params: H10Params,
     AllocF: Allocator<floatX>,
 >(

@@ -541,9 +541,7 @@ where
       });
     } else {
         if num_threads > 1 {
-            for (offset, alloc_item) in alloc_per_thread[1..num_threads - 1]
-                .iter_mut()
-                .enumerate()
+            for (offset, alloc_item) in alloc_per_thread[1..num_threads - 1].iter_mut().enumerate()
             {
                 let thread_index = offset + 1;
                 thread_spawner.spawn(

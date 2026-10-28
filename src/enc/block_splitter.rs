@@ -207,10 +207,7 @@ fn RefineEntropyCodes<
         let mut sample = HistogramType::default();
         HistogramClear(&mut sample);
         RandomSample(&mut seed, data, length, stride, &mut sample);
-        HistogramAddHistogram(
-            &mut histograms[iter.wrapping_rem(num_histograms)],
-            &sample,
-        );
+        HistogramAddHistogram(&mut histograms[iter.wrapping_rem(num_histograms)], &sample);
     }
 }
 

@@ -1604,7 +1604,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
             let delta: u64 = self.unprocessed_input_size();
             let tail: u64 = available_in as u64;
             let limit: u32 = 1u32 << 30;
-            
+
             let total: u32 = if delta >= u64::from(limit)
                 || tail >= u64::from(limit)
                 || delta.wrapping_add(tail) >= u64::from(limit)
@@ -1676,7 +1676,7 @@ fn GetHashTableInternal<'a, AllocI32: alloc::Allocator<i32>>(
 ) -> &'a mut [i32] {
     let max_table_size: usize = MaxHashTableSize(quality);
     let mut htsize: usize = HashTableSize(max_table_size, input_size);
-    
+
     if quality == 0i32 && htsize & 0xaaaaausize == 0usize {
         htsize <<= 1i32;
     }
@@ -2764,7 +2764,7 @@ impl<Alloc: BrotliAlloc> BrotliEncoderStateStruct<Alloc> {
                     && op == BrotliEncoderOperation::BROTLI_OPERATION_FLUSH;
                 let max_out_size: usize = (2usize).wrapping_mul(block_size).wrapping_add(503);
                 let mut inplace: i32 = 1i32;
-                
+
                 let mut storage_ix: usize = self.last_bytes_bits_ as usize;
                 let mut table_size: usize = 0;
 

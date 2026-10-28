@@ -418,11 +418,11 @@ impl BroCatli {
                 }
                 let num_whole_bytes_to_copy =
                     usize::from(new_stream_pending.num_bytes_read) - whole_byte_source;
-                realigned_header[whole_byte_destination
-                    ..(num_whole_bytes_to_copy + whole_byte_destination)]
+                realigned_header
+                    [whole_byte_destination..(num_whole_bytes_to_copy + whole_byte_destination)]
                     .copy_from_slice(
-                        &new_stream_pending.bytes_so_far[whole_byte_source
-                            ..(num_whole_bytes_to_copy + whole_byte_source)],
+                        &new_stream_pending.bytes_so_far
+                            [whole_byte_source..(num_whole_bytes_to_copy + whole_byte_source)],
                     );
                 out_bytes[*out_offset] = realigned_header[0];
                 self.any_bytes_emitted = true;

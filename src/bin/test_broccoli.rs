@@ -507,7 +507,7 @@ fn test_bytealign_appendable_with_bare() {
             byte_align: true, // implied by -bare
             catable: true,
             use_dictionary: false, // implied by -catable
-            appendable: true, // implied by -catable
+            appendable: true,      // implied by -catable
             lgwin: 22,
             ..Default::default()
         };

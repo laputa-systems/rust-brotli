@@ -197,17 +197,13 @@ pub fn BrotliHistogramCombine<
             let mut copy_to_idx: usize = 0usize;
             i = 0usize;
             while i < num_pairs {
-                'continue12: {
+                {
+                    let p: HistogramPair = pairs[i];
+                    if !((p).idx1 == best_idx1
+                        || (p).idx2 == best_idx1
+                        || (p).idx1 == best_idx2
+                        || (p).idx2 == best_idx2)
                     {
-                        let p: HistogramPair = pairs[i];
-                        if (p).idx1 == best_idx1
-                            || (p).idx2 == best_idx1
-                            || (p).idx1 == best_idx2
-                            || (p).idx2 == best_idx2
-                        {
-                            /* Remove invalid pair from the queue. */
-                            break 'continue12;
-                        }
                         if HistogramPairIsLess(&pairs[0], &p) {
                             /* Replace the top of the queue if needed. */
                             let front: HistogramPair = pairs[0];

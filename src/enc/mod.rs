@@ -290,7 +290,7 @@ where
                     }
                 }
             }
-            
+
             let op: BrotliEncoderOperation = if available_in == 0 {
                 BrotliEncoderOperation::BROTLI_OPERATION_FINISH
             } else {

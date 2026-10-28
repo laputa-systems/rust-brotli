@@ -209,8 +209,8 @@ impl<ErrType, R: CustomRead<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: Br
             if self.input_len < self.input_buffer.slice_mut().len() && !self.input_eof {
                 {
                     let size = self
-                    .input
-                    .read(&mut self.input_buffer.slice_mut()[self.input_len..])?;
+                        .input
+                        .read(&mut self.input_buffer.slice_mut()[self.input_len..])?;
                     if size == 0 {
                         self.input_eof = true;
                     } else {
@@ -219,7 +219,7 @@ impl<ErrType, R: CustomRead<ErrType>, BufferType: SliceWrapperMut<u8>, Alloc: Br
                     }
                 }
             }
-            
+
             let op: BrotliEncoderOperation = if avail_in == 0 {
                 BrotliEncoderOperation::BROTLI_OPERATION_FINISH
             } else {

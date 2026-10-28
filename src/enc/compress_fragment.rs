@@ -216,7 +216,9 @@ fn ShouldUseUncompressedMode(delta: isize, insertlen: usize, literal_ratio: usiz
     let compressed = delta as usize;
     if compressed.wrapping_mul(50) > insertlen {
         false
-    } else { literal_ratio > 980 }
+    } else {
+        literal_ratio > 980
+    }
 }
 fn RewindBitPosition(new_storage_ix: usize, storage_ix: &mut usize, storage: &mut [u8]) {
     let bitpos: usize = new_storage_ix & 7usize;
@@ -625,21 +627,9 @@ fn BuildAndStoreCommandPrefixCode(
             cmd_depth[(448usize).wrapping_add((8usize).wrapping_mul(i))] =
                 depth[i.wrapping_add(56)];
         }
-        BrotliStoreHuffmanTree(
-            &cmd_depth[..],
-            704usize,
-            &mut tree[..],
-            storage_ix,
-            storage,
-        );
+        BrotliStoreHuffmanTree(&cmd_depth[..], 704usize, &mut tree[..], storage_ix, storage);
     }
-    BrotliStoreHuffmanTree(
-        &depth[64..],
-        64usize,
-        &mut tree[..],
-        storage_ix,
-        storage,
-    );
+    BrotliStoreHuffmanTree(&depth[64..], 64usize, &mut tree[..], storage_ix, storage);
 }
 
 #[allow(unused_assignments)]

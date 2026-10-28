@@ -499,21 +499,9 @@ fn BuildAndStoreCommandPrefixCode(
             cmd_depth[(448usize).wrapping_add((8usize).wrapping_mul(i))] =
                 depth[i.wrapping_add(16)];
         }
-        BrotliStoreHuffmanTree(
-            &cmd_depth[..],
-            704usize,
-            &mut tree[..],
-            storage_ix,
-            storage,
-        );
+        BrotliStoreHuffmanTree(&cmd_depth[..], 704usize, &mut tree[..], storage_ix, storage);
     }
-    BrotliStoreHuffmanTree(
-        &depth[64..],
-        64usize,
-        &mut tree[..],
-        storage_ix,
-        storage,
-    );
+    BrotliStoreHuffmanTree(&depth[64..], 64usize, &mut tree[..], storage_ix, storage);
 }
 
 fn StoreCommands<AllocHT: alloc::Allocator<HuffmanTree>>(

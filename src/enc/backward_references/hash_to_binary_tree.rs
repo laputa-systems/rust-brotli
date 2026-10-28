@@ -155,10 +155,7 @@ pub fn InitializeH10<AllocU32: Allocator<u32>>(
 }
 fn initialize_h10<
     AllocU32: Allocator<u32>,
-    Buckets: SliceWrapperMut<u32>
-        + SliceWrapper<u32>
-        + Allocable<u32, AllocU32>
-        + PartialEq<Buckets>,
+    Buckets: SliceWrapperMut<u32> + SliceWrapper<u32> + Allocable<u32, AllocU32> + PartialEq<Buckets>,
 >(
     m32: &mut AllocU32,
     one_shot: bool,
@@ -436,10 +433,7 @@ fn RightChildIndexH10<AllocU32: Allocator<u32>,
 
 pub fn StoreAndFindMatchesH10<
     AllocU32: Allocator<u32>,
-    Buckets: Allocable<u32, AllocU32>
-        + SliceWrapperMut<u32>
-        + SliceWrapper<u32>
-        + PartialEq<Buckets>,
+    Buckets: Allocable<u32, AllocU32> + SliceWrapperMut<u32> + SliceWrapper<u32> + PartialEq<Buckets>,
     Params: H10Params,
 >(
     xself: &mut H10<AllocU32, Buckets, Params>,

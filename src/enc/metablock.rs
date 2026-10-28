@@ -586,10 +586,8 @@ fn BlockSplitterFinishBlock<
         for j in 0..2 {
             let last_histogram_ix: usize = xself.last_histogram_ix_[j];
             HistogramAddHistogram(&mut combined_histo[j], &histograms[last_histogram_ix]);
-            combined_entropy[j] = BitsEntropy(
-                &combined_histo[j].slice_mut()[0..],
-                xself.alphabet_size_,
-            );
+            combined_entropy[j] =
+                BitsEntropy(&combined_histo[j].slice_mut()[0..], xself.alphabet_size_);
             diff[j] = combined_entropy[j] - entropy - xself.last_entropy_[j];
         }
         if split.num_types < 256usize
@@ -700,10 +698,7 @@ fn ContextBlockSplitterFinishBlock<
         for (i, entropy_item) in entropy[..num_contexts].iter_mut().enumerate() {
             let curr_histo_ix: usize = xself.curr_histogram_ix_.wrapping_add(i);
             let mut j: usize;
-            *entropy_item = BitsEntropy(
-                (histograms[curr_histo_ix]).slice(),
-                xself.alphabet_size_,
-            );
+            *entropy_item = BitsEntropy((histograms[curr_histo_ix]).slice(), xself.alphabet_size_);
             j = 0usize;
             while j < 2usize {
                 {

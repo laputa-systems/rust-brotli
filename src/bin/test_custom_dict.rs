@@ -190,7 +190,9 @@ fn test_custom_wrong_dict_fails() {
     raw.reset_read();
     let mut vec = Vec::<u8>::new();
     vec.extend(&dict[1..]); // slightly offset dictionary to be wrong, and ensure the dict was being used above
-    if super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)).is_ok() { panic!("Decompression should have failed") }
+    if super::decompress(&mut br, &mut rt, 4096, Rebox::from(vec)).is_ok() {
+        panic!("Decompression should have failed")
+    }
     if rt.data() == raw.data() {
         panic!("they should be unequal");
     }

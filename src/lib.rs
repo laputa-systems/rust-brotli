@@ -5,6 +5,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
+#![allow(future_incompatible)]
 #![cfg_attr(feature = "benchmark", feature(test))]
 #![cfg_attr(feature = "simd", feature(portable_simd))]
 #![cfg_attr(

@@ -222,8 +222,7 @@ impl<AllocU32: alloc::Allocator<u32>> EntropyPyramid<AllocU32> {
                 pop_item.bzero();
                 pop_item.cached_bit_entropy = 0.0;
             } else {
-                pop_item.cached_bit_entropy =
-                    HuffmanCost(pop_item.bucket_populations.slice());
+                pop_item.cached_bit_entropy = HuffmanCost(pop_item.bucket_populations.slice());
             }
             //println!("BASE PYRAMID {} = {}", stride,output.pop[stride].cached_bit_entropy);
         }
@@ -724,8 +723,8 @@ impl<AllocU32: alloc::Allocator<u32>> EntropyTally<AllocU32> {
                 .iter_mut()
                 .zip(priors[..NUM_STRIDES].iter())
             {
-                pop_item.bucket_populations.slice_mut()
-                    [*prior as usize * 256 + (*val as usize)] += 1;
+                pop_item.bucket_populations.slice_mut()[*prior as usize * 256 + (*val as usize)] +=
+                    1;
             }
             {
                 let mut tmp = [0u8; NUM_STRIDES - 1];
