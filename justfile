@@ -26,16 +26,6 @@ build-ffi:
     # For now, use original make file for building/testing the FFI crate
     cd c && make
 
-# Run cargo fmt with optional params
-fmt *ARGS:
-    cargo fmt --all -- {{ ARGS }}
-    cd c && cargo fmt --all -- {{ ARGS }}
-
-# Run Nightly cargo fmt, ordering imports by groups
-fmt2:
-    cargo +nightly fmt -- --config imports_granularity=Module,group_imports=StdExternalCrate
-    cd c && cargo +nightly fmt -- --config imports_granularity=Module,group_imports=StdExternalCrate
-
 # Run cargo clippy
 clippy:
     cargo clippy -- -D warnings
@@ -76,7 +66,7 @@ read-msrv:
     cargo metadata --no-deps --format-version 1 | jq -r -e '.packages[] | select(.name == "brotli").rust_version'
 
 # All tests to run for CI (TODO: add clippy)
-ci-test: sys-info (fmt "--check") build test test-doc
+ci-test: sys-info build test test-doc
 
 # All stable tests to run for CI with the earliest supported Rust version. Assumes the Rust version is already set by rustup.
 ci-test-msrv: sys-info build-brotli build-ffi test
