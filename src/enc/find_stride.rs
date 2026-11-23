@@ -733,9 +733,8 @@ impl<AllocU32: alloc::Allocator<u32>> EntropyTally<AllocU32> {
                 priors[0] = *val;
             }
         }
-        for stride in 0..NUM_STRIDES {
-            self.pop[stride].cached_bit_entropy =
-                HuffmanCost(self.pop[stride].bucket_populations.slice());
+        for population in self.pop[..NUM_STRIDES].iter_mut() {
+            population.cached_bit_entropy = HuffmanCost(population.bucket_populations.slice());
         }
     }
     fn identify_best_population_and_update_cache(&mut self) -> u8 {

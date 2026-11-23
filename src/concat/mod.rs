@@ -394,9 +394,12 @@ impl BroCatli {
                     return BroCatliResult::BrotliFileNotCraftedForConcatenation;
                 };
                 let mut bytes_so_far = 0u64;
-                for index in 0..usize::from(new_stream_pending.num_bytes_read) {
-                    bytes_so_far |=
-                        u64::from(new_stream_pending.bytes_so_far[index]) << (index * 8);
+                let bytes_read = usize::from(new_stream_pending.num_bytes_read);
+                for (index, byte) in new_stream_pending.bytes_so_far[..bytes_read]
+                    .iter()
+                    .enumerate()
+                {
+                    bytes_so_far |= u64::from(*byte) << (index * 8);
                 }
                 bytes_so_far >>= window_offset; // mask out the window size
                 bytes_so_far &= (1u64 << (varlen_offset - window_offset)) - 1;
