@@ -51,7 +51,7 @@ pub use brotli_decompressor::BrotliDecompress;
 pub use brotli_decompressor::BrotliDecompressCustomAlloc;
 pub use brotli_decompressor::HuffmanCode; // so we can make custom allocator for decompression
 pub use brotli_decompressor::{
-    dictionary, reader, transform, writer, BrotliDecompressCustomIo,
+    dictionary, reader, transform, writer, BrotliDecoderIsFinished, BrotliDecompressCustomIo,
     BrotliDecompressCustomIoCustomDict, BrotliDecompressStream, BrotliResult, BrotliState,
 };
 
