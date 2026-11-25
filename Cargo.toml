@@ -58,6 +58,7 @@ incremental = false
 
 [features]
 default = ["std"]
+decoder-only = []
 benchmark = ["brotli-decompressor/benchmark"]
 billing = []
 disable-timer = ["brotli-decompressor/disable-timer"]

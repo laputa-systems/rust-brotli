@@ -13,7 +13,7 @@
     cfg_attr(not(feature = "std"), feature(lang_items))
 )]
 
-#[macro_use]
+#[cfg_attr(not(feature = "decoder-only"), macro_use)]
 // <-- for debugging, remove xprintln from bit_reader and replace with println
 #[cfg(feature = "std")]
 extern crate std;
@@ -22,9 +22,11 @@ extern crate alloc_no_stdlib as alloc;
 extern crate alloc_stdlib;
 extern crate brotli_decompressor;
 
+#[cfg(not(feature = "decoder-only"))]
 pub mod concat;
+#[cfg(not(feature = "decoder-only"))]
 pub mod enc;
-#[cfg(feature = "ffi-api")]
+#[cfg(all(feature = "ffi-api", not(feature = "decoder-only")))]
 pub mod ffi;
 
 pub use alloc::{AllocatedStackMemory, Allocator, SliceWrapper, SliceWrapperMut, StackAllocator};
@@ -53,17 +55,23 @@ pub use brotli_decompressor::{
     BrotliDecompressCustomIoCustomDict, BrotliDecompressStream, BrotliResult, BrotliState,
 };
 
+#[cfg(not(feature = "decoder-only"))]
 pub use self::enc::combined_alloc::CombiningAllocator;
+#[cfg(not(feature = "decoder-only"))]
 pub use crate::enc::input_pair::{InputPair, InputReference, InputReferenceMut};
+#[cfg(not(feature = "decoder-only"))]
 pub use crate::enc::interface::SliceOffset;
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", not(feature = "decoder-only")))]
 pub use crate::enc::reader::CompressorReader;
+#[cfg(not(feature = "decoder-only"))]
 pub use crate::enc::reader::CompressorReaderCustomIo;
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", not(feature = "decoder-only")))]
 pub use crate::enc::writer::CompressorWriter;
+#[cfg(not(feature = "decoder-only"))]
 pub use crate::enc::writer::CompressorWriterCustomIo;
+#[cfg(not(feature = "decoder-only"))]
 pub use crate::enc::{interface, BrotliCompressCustomIo, BrotliCompressCustomIoCustomDict};
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", not(feature = "decoder-only")))]
 pub use crate::enc::{BrotliCompress, BrotliCompressCustomAlloc};
 
 pub const VERSION: u8 = 1;
